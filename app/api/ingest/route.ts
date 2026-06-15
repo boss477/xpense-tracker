@@ -56,7 +56,27 @@ export async function POST(request: Request) {
     // Clean up any trailing punctuation just to be safe
     merchant = merchant.replace(/[.,;]+$/, "").trim();
 
-    // 3. Insert the perfectly parsed data into your Supabase database
+    // 3. Extract the Exact Transaction Date (Fixes "Slow SMS" lag)
+    let transactionDate = new Date(); // Fallback to "right now" if the text has no date
+    
+    // Look for ICICI's specific date format: "on 14-Jun-26"
+    const dateMatch = rawMessage.match(/on\s+(\d{1,2}-[a-zA-Z]{3}-\d{2})/i);
+    
+    if (dateMatch) {
+      // Split "14-Jun-26" into pieces
+      const dateParts = dateMatch[1].split('-'); 
+      // Rebuild it so JavaScript never gets confused: "14 Jun 2026"
+      const cleanDateString = `${dateParts[0]} ${dateParts[1]} 20${dateParts[2]}`;
+      
+      const parsedDate = new Date(cleanDateString);
+      
+      // If it parsed successfully, overwrite the fallback date!
+      if (!isNaN(parsedDate.getTime())) {
+        transactionDate = parsedDate;
+      }
+    }
+
+    // 4. Insert into Supabase WITH the forced timestamp
     const { error } = await getSupabase()
       .from('expenses')
       .insert([
@@ -65,7 +85,8 @@ export async function POST(request: Request) {
           raw_message: rawMessage,
           category: initialCategory,
           type: transactionType,
-          merchant: merchant
+          merchant: merchant,
+          created_at: transactionDate.toISOString()
         }
       ]);
 
