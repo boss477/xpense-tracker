@@ -29,11 +29,11 @@ export async function POST(request: Request) {
     let merchant = "Unknown Merchant";
 
     // FORMAT A: Check for the new format -> "; NEW SARAVANAA S credited."
-    const newFormatMatch = cleanedMessage.match(/;\s*([a-zA-Z0-9\s@&*\-]+?)\s+credited/i);
+    const newFormatMatch = cleanedMessage.match(/;\s*(.+?)\s+credited/i);
     // FORMAT B: Info format -> "Info: UPI/653121257200/Swiggy."
-    const infoFormatMatch = cleanedMessage.match(/Info:\s*UPI\/\d+\/([a-zA-Z0-9\s@&*\-]+?)(?:\.|$)/i);
+    const infoFormatMatch = cleanedMessage.match(/Info:\s*UPI\/\d+\/(.+?)(?:\.|$|\s)/i);
     // FORMAT C: Old/standard format -> "sent to Swiggy. UPI Ref..."
-    const oldFormatMatch = cleanedMessage.match(/(?:sent to|to|VPA|paid to)\s+([a-zA-Z0-9\s@&*\-]+?)(?:\s+on|\s+via|\s+Ref|\s+UPI|\.|$)/i);
+    const oldFormatMatch = cleanedMessage.match(/(?:sent to|paid to|to|VPA)\s+(.+?)(?:\s+on|\s+via|\s+Ref|\s+UPI|\.|$)/i);
 
     if (newFormatMatch) {
       merchant = newFormatMatch[1].trim();
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     // Clean up any trailing punctuation just to be safe
-    merchant = merchant.replace(/[.,;]+$/, "");
+    merchant = merchant.replace(/[.,;]+$/, "").trim();
 
     // 3. Insert the perfectly parsed data into your Supabase database
     const { error } = await supabase

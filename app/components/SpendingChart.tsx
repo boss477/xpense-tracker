@@ -90,16 +90,17 @@ export function SpendingChart() {
 
   const total = useMemo(() => slices.reduce((sum, s) => sum + s.total, 0), [slices]);
 
-  // Pre-compute arc angles for the donut
   const arcs = useMemo(() => {
     let cursor = 0;
-    return slices.map((s) => {
+    const result = [];
+    for (const s of slices) {
       const frac = total > 0 ? s.total / total : 0;
       const start = cursor * 360;
       const end = (cursor + frac) * 360;
       cursor += frac;
-      return { ...s, start, end, mid: (start + end) / 2, frac };
-    });
+      result.push({ ...s, start, end, mid: (start + end) / 2, frac });
+    }
+    return result;
   }, [slices, total]);
 
   const selectedSlice = arcs.find((a) => a.cfg.dbValue === selected) ?? null;
