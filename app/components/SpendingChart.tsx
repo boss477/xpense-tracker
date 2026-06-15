@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet } from "lucide-react";
+import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle } from "lucide-react";
 import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
 
 const getSupabase = () => createClient(
@@ -57,6 +57,7 @@ const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
 export function SpendingChart() {
   const [slices, setSlices] = useState<Slice[]>([]);
+  const [incomeStats, setIncomeStats] = useState({ total: 0, count: 0 });
   const [expenses, setExpenses] = useState<RawExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"donut" | "bar">("donut");
@@ -93,6 +94,10 @@ export function SpendingChart() {
         .sort((a, b) => b.total - a.total);
 
       setSlices(next);
+      setIncomeStats({
+        total: totals.get("Income")?.total ?? 0,
+        count: totals.get("Income")?.count ?? 0,
+      });
       setExpenses((data as RawExpense[]) ?? []);
       setLoading(false);
     };
@@ -124,8 +129,8 @@ export function SpendingChart() {
       {/* Header: title + view toggle */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-bold tracking-tight">Spending</h2>
-          <p className="text-xs text-white/40">By category</p>
+          <h2 className="text-base font-bold tracking-tight">Overview</h2>
+          <p className="text-xs text-white/40">Income & Spending</p>
         </div>
         <div className="flex items-center gap-1 bg-white/5 rounded-full p-1">
           <button
@@ -160,6 +165,33 @@ export function SpendingChart() {
         </div>
       ) : (
         <>
+          {/* Income Bar */}
+          <button
+            onClick={() => toggle("Income")}
+            className={`w-full mb-6 flex items-center justify-between p-4 rounded-2xl border transition-all ${
+              selected === "Income"
+                ? "bg-emerald-500/20 border-emerald-500/40 ring-1 ring-emerald-500/40 scale-[1.02]"
+                : "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/15"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center rounded-full h-10 w-10 bg-emerald-500 shadow-sm">
+                <ArrowUpCircle className="h-5 w-5 text-[#1c1f17]" strokeWidth={2.5} />
+              </span>
+              <div className="text-left">
+                <p className="font-bold text-emerald-400 leading-tight">Total Income</p>
+                <p className="text-xs text-emerald-400/60 mt-0.5">{incomeStats.count} transactions</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-emerald-400 tracking-tight">+{inr(incomeStats.total)}</p>
+            </div>
+          </button>
+
+          <div className="mb-4">
+             <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-2">Spending Breakdown</h3>
+          </div>
+
           {view === "donut" ? (
             <DonutView
               arcs={arcs}
