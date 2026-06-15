@@ -22,11 +22,16 @@ export async function POST(request: Request) {
     const amountMatch = rawMessage.match(/(?:Rs\.?|INR)\s*(\d+(?:\.\d{1,2})?)/i);
     const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
 
-    // Clean up boilerplate text to avoid false positive matches like "to 9215676766"
+    // Clean up boilerplate text to avoid false positive matches
     let cleanedMessage = rawMessage.replace(/Call \d+ for dispute\.?\s*/i, '');
     cleanedMessage = cleanedMessage.replace(/SMS BLOCK .*? to \d+\.?/i, '');
 
-    // 2. Extract the Merchant (Handling multiple ICICI formats)
+    // Determine if this is an Income transaction
+    const isIncome = /is credited with/i.test(cleanedMessage) || /credited to/i.test(cleanedMessage);
+    const transactionType = isIncome ? 'income' : 'expense';
+    const initialCategory = isIncome ? 'Income' : 'Uncategorized';
+
+    // 2. Extract the Merchant
     let merchant = "Unknown Merchant";
 
     // FORMAT A: Check for the new format -> "; NEW SARAVANAA S credited."
@@ -35,6 +40,8 @@ export async function POST(request: Request) {
     const infoFormatMatch = cleanedMessage.match(/Info:\s*UPI\/\d+\/(.+?)(?:\.|$|\s)/i);
     // FORMAT C: Old/standard format -> "sent to Swiggy. UPI Ref..."
     const oldFormatMatch = cleanedMessage.match(/(?:sent to|paid to|to|VPA)\s+(.+?)(?:\s+on|\s+via|\s+Ref|\s+UPI|\.|$)/i);
+    // FORMAT D: Income format -> "from REWAA KAMAL BAT."
+    const incomeFormatMatch = cleanedMessage.match(/from\s+(.+?)(?:\.|\s+UPI|$)/i);
 
     if (newFormatMatch) {
       merchant = newFormatMatch[1].trim();
@@ -42,6 +49,8 @@ export async function POST(request: Request) {
       merchant = infoFormatMatch[1].trim();
     } else if (oldFormatMatch) {
       merchant = oldFormatMatch[1].trim();
+    } else if (incomeFormatMatch) {
+      merchant = incomeFormatMatch[1].trim();
     }
 
     // Clean up any trailing punctuation just to be safe
@@ -54,8 +63,8 @@ export async function POST(request: Request) {
         {
           amount: amount,
           raw_message: rawMessage,
-          category: 'Uncategorized',
-          type: 'expense',
+          category: initialCategory,
+          type: transactionType,
           merchant: merchant
         }
       ]);
