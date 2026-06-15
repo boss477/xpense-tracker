@@ -7,7 +7,7 @@ import { CheckCircle2, ChartPie } from "lucide-react";
 import { AddIncomeButton } from "./components/AddIncomeButton";
 import { CATEGORIES } from "./categories";
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchExpenses = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from("expenses")
         .select("*")
         .eq("category", "Uncategorized")
@@ -50,7 +50,7 @@ export default function Dashboard() {
 
     fetchExpenses();
 
-    const channel = supabase
+    const channel = getSupabase()
       .channel("realtime-expenses")
       .on(
         "postgres_changes",
@@ -63,14 +63,14 @@ export default function Dashboard() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      getSupabase().removeChannel(channel);
     };
   }, []);
 
   const categorizeExpense = async (id: string, newCategory: string) => {
     setExpenses((current) => current.filter((exp) => exp.id !== id));
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from("expenses")
       .update({ category: newCategory })
       .eq("id", id);

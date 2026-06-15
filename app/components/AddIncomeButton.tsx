@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowUpCircle, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -20,7 +20,7 @@ export function AddIncomeButton({ onIncomeAdded }: { onIncomeAdded?: () => void 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("expenses").insert([
+      const { error } = await getSupabase().from("expenses").insert([
         {
           amount: parseFloat(amount),
           merchant: source,

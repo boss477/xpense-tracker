@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet } from "lucide-react";
 import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
 
-const supabase = createClient(
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -54,7 +54,7 @@ export function SpendingChart() {
 
   useEffect(() => {
     const load = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from("expenses")
         .select("amount, category")
         .neq("category", "Uncategorized");

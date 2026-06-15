@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase Client using your Service Role Key
-// This allows the backend to bypass RLS and insert data securely
-const supabase = createClient(
+// Initialize Supabase Client dynamically inside the handler
+// This prevents Next.js from throwing errors during the static build phase
+// if the SUPABASE_SERVICE_ROLE_KEY environment variable is not set at build time.
+const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     merchant = merchant.replace(/[.,;]+$/, "").trim();
 
     // 3. Insert the perfectly parsed data into your Supabase database
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('expenses')
       .insert([
         {
