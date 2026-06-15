@@ -7,6 +7,7 @@ import {
   Film,
   ShoppingBag,
   HeartPulse,
+  Tag,
   type LucideIcon,
 } from "lucide-react";
 
@@ -69,6 +70,13 @@ export const CATEGORIES: CategoryConfig[] = [
     icon: Zap,
     colorTheme: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/30",
     color: "#f59e0b",
+  },
+  {
+    label: "Custom",
+    dbValue: "Custom",
+    icon: Tag,
+    colorTheme: "bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 border-slate-500/30",
+    color: "#64748b",
   },
   {
     label: "Income",
