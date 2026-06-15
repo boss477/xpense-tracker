@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Cashew Brain",
-    short_name: "Cashew",
+    name: "Xpense-tracker Brain",
+    short_name: "Xpense-tracker",
     description: "Personal expense tracker and automation brain",
     start_url: "/",
     display: "standalone",
