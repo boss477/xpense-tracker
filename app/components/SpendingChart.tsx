@@ -16,6 +16,15 @@ interface Slice {
   count: number;
 }
 
+interface RawExpense {
+  id: string;
+  amount: number;
+  category: string;
+  merchant: string;
+  created_at: string;
+  type: string;
+}
+
 // --- Donut geometry helpers ---
 const SIZE = 280;
 const CENTER = SIZE / 2;
@@ -48,6 +57,7 @@ const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
 export function SpendingChart() {
   const [slices, setSlices] = useState<Slice[]>([]);
+  const [expenses, setExpenses] = useState<RawExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"donut" | "bar">("donut");
   const [selected, setSelected] = useState<string | null>(null);
@@ -56,8 +66,9 @@ export function SpendingChart() {
     const load = async () => {
       const { data, error } = await getSupabase()
         .from("expenses")
-        .select("amount, category")
-        .neq("category", "Uncategorized");
+        .select("id, amount, category, merchant, created_at, type")
+        .neq("category", "Uncategorized")
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Failed to load spending:", error);
@@ -82,6 +93,7 @@ export function SpendingChart() {
         .sort((a, b) => b.total - a.total);
 
       setSlices(next);
+      setExpenses((data as RawExpense[]) ?? []);
       setLoading(false);
     };
 
@@ -167,6 +179,42 @@ export function SpendingChart() {
             transactions={slices.reduce((n, s) => n + s.count, 0)}
             onClear={() => setSelected(null)}
           />
+
+          {selected && (
+            <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+              <h3 className="text-sm font-bold tracking-tight mb-2">Transaction History</h3>
+              {expenses
+                .filter((e) => e.category === selected)
+                .map((exp) => (
+                  <div
+                    key={exp.id}
+                    className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5"
+                  >
+                    <div>
+                      <p className="font-bold text-sm leading-tight">
+                        {exp.merchant || "Unknown Merchant"}
+                      </p>
+                      <p className="text-[11px] text-white/40 mt-0.5">
+                        {new Date(exp.created_at).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-bold text-sm tracking-tight ${
+                        exp.type === "income" ? "text-emerald-400" : "text-white"
+                      }`}
+                    >
+                      {exp.type === "income" ? "+" : "-"}₹{exp.amount}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
         </>
       )}
     </div>
