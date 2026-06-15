@@ -79,30 +79,30 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-neutral-50 p-4 md:p-8 font-sans text-neutral-900">
+    <main className="min-h-screen p-4 md:p-8 font-sans text-white">
       <div className="mx-auto max-w-lg space-y-6">
 
         {/* Header Section */}
-        <header className="flex items-start justify-between gap-3 pb-4 border-b border-neutral-200">
+        <header className="flex items-start justify-between gap-3 pb-4 border-b border-white/10">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Triage Engine</h1>
-            <p className="text-sm text-neutral-500">Pending classification</p>
+            <p className="text-sm text-white/40">Pending classification</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Link
               href="/insights"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-neutral-600 border border-neutral-200 rounded-lg hover:bg-neutral-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white/70 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
             >
               <ChartPie className="h-4 w-4" />
               Insights
             </Link>
             <AddIncomeButton />
-            <div className="flex items-center gap-2 bg-neutral-200/50 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
-              <span className="text-xs font-semibold text-neutral-600">
+              <span className="text-xs font-semibold text-white/70">
                 {expenses.length} Pending
               </span>
             </div>
@@ -112,22 +112,22 @@ export default function Dashboard() {
         {/* Expenses List */}
         <div className="space-y-4">
           {expenses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-neutral-400 space-y-3 bg-white rounded-2xl border border-neutral-200 border-dashed">
-              <CheckCircle2 className="w-12 h-12 text-neutral-300" />
+            <div className="flex flex-col items-center justify-center py-16 text-white/40 space-y-3 bg-[#1c1f17] rounded-2xl border border-white/10 border-dashed">
+              <CheckCircle2 className="w-12 h-12 text-white/20" />
               <p className="text-sm font-medium">Inbox zero! You are all caught up.</p>
             </div>
           ) : (
             expenses.map((expense) => (
               <div
                 key={expense.id}
-                className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm transition-all hover:shadow-md"
+                className="bg-[#1c1f17] p-5 rounded-2xl border border-white/5 shadow-sm transition-all hover:shadow-md hover:border-white/10"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-bold text-lg leading-none mb-1">
                       {expense.merchant || "Unknown Merchant"}
                     </h3>
-                    <p className="text-xs text-neutral-500 font-medium">
+                    <p className="text-xs text-white/40 font-medium">
                       {formatShortDate(expense.created_at)}
                     </p>
                   </div>
@@ -138,8 +138,8 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-neutral-50 rounded-lg p-3 mb-4 border border-neutral-100">
-                  <p className="text-xs text-neutral-500 font-mono break-words leading-relaxed">
+                <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/5">
+                  <p className="text-xs text-white/50 font-mono break-words leading-relaxed">
                     {expense.raw_message}
                   </p>
                 </div>
