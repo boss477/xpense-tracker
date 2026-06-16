@@ -4,7 +4,18 @@ Cashew Clone is a sleek, real-time personal finance manager and expense triage s
 
 Designed with **Next.js 15 (App Router)**, **Supabase**, and styled using **Vanilla Tailwind CSS**, it is built to run fast and look premium.
 
+## 📸 App Preview & Demo
+
+| Dashboard Overview | Analytics Insights |
+| :---: | :---: |
+| ![Dashboard Screenshot](https://raw.githubusercontent.com/boss477/xpense-tracker/master/public/dashboard-screenshot.png) | ![Insights Screenshot](https://raw.githubusercontent.com/boss477/xpense-tracker/master/public/insights-screenshot.png) |
+
+### 🎥 Video Demonstration
+<!-- Add your video embed or link here -->
+*(Video Demo link will be added here)*
+
 ---
+
 
 ## 🚀 Key Features
 
