@@ -53,6 +53,11 @@ Deploy the Next.js app to [Vercel](https://vercel.com/):
 2. Add the environment variables from your `.env.local` to the Vercel project configuration.
 3. Deploy! You will receive a production URL (e.g., `https://xpense-tracker.vercel.app`).
 
+### 4. Deploy with 1-Click
+You can also deploy directly using this Vercel Deploy button:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/boss477/xpense-tracker)
+
 ---
 
 ## 📱 MacroDroid Configuration (Android Automation)
@@ -98,3 +103,16 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to test.
+
+---
+
+## 🤝 Contributing
+
+Does your bank use a different SMS format? Open a Pull Request and add your bank's regex to the parsing engine! All contributions to expand bank format support are highly appreciated.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](file:///c:/Users/fawaz/cashew-clone/LICENSE) file for details.
+
