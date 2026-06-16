@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { CheckCircle2, ChartPie } from "lucide-react";
 import { AddIncomeButton } from "./components/AddIncomeButton";
-import { CATEGORIES } from "./categories";
+import { CATEGORIES, type CategoryConfig } from "./categories";
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +23,9 @@ interface Expense {
 
 export default function Dashboard() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [activePrompt, setActivePrompt] = useState<{ expenseId: string; category: CategoryConfig } | null>(null);
+  const [promptTitle, setPromptTitle] = useState("");
+  const [promptCategory, setPromptCategory] = useState("");
 
   const formatShortDate = (isoString: string) => {
     if (!isoString) return "";
@@ -67,15 +70,34 @@ export default function Dashboard() {
     };
   }, []);
 
-  const categorizeExpense = async (id: string, newCategory: string) => {
+  const categorizeExpense = async (id: string, newCategory: string, newMerchant: string) => {
     setExpenses((current) => current.filter((exp) => exp.id !== id));
 
     const { error } = await getSupabase()
       .from("expenses")
-      .update({ category: newCategory })
+      .update({ category: newCategory, merchant: newMerchant })
       .eq("id", id);
 
-    if (error) console.error("Failed to update category:", error);
+    if (error) console.error("Failed to update category/merchant:", error);
+  };
+
+  const handleCategoryClick = (expenseId: string, cat: CategoryConfig) => {
+    const expense = expenses.find(e => e.id === expenseId);
+    setActivePrompt({ expenseId, category: cat });
+    setPromptTitle(expense?.merchant && expense.merchant !== "Unknown Merchant" ? expense.merchant : "");
+    setPromptCategory("");
+  };
+
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activePrompt || !promptTitle.trim()) return;
+    
+    if (activePrompt.category.label === "Custom" && !promptCategory.trim()) return;
+
+    const finalCategory = activePrompt.category.label === "Custom" ? promptCategory.trim() : activePrompt.category.dbValue;
+    
+    categorizeExpense(activePrompt.expenseId, finalCategory, promptTitle.trim());
+    setActivePrompt(null);
   };
 
   return (
@@ -151,7 +173,7 @@ export default function Dashboard() {
                     return (
                       <button
                         key={cat.label}
-                        onClick={() => categorizeExpense(expense.id, cat.dbValue)}
+                        onClick={() => handleCategoryClick(expense.id, cat)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold transition-colors ${cat.colorTheme}`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -166,6 +188,68 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Unified Categorization Modal */}
+      {activePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1c1f17] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-bold mb-4 text-white">
+              {activePrompt.category.label === "Custom" 
+                ? "Custom Category Details" 
+                : `Categorizing as ${activePrompt.category.label}`}
+            </h3>
+            <form onSubmit={handlePromptSubmit}>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
+                    Expense Title
+                  </label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={promptTitle}
+                    onChange={(e) => setPromptTitle(e.target.value)}
+                    placeholder="e.g. Briyani, Uber, Rent"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+
+                {activePrompt.category.label === "Custom" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1.5 uppercase tracking-wider">
+                      Category Name
+                    </label>
+                    <input
+                      type="text"
+                      value={promptCategory}
+                      onChange={(e) => setPromptCategory(e.target.value)}
+                      placeholder="e.g. Vacation, Gifts"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActivePrompt(null)}
+                  className="px-4 py-2 text-sm font-semibold text-white/70 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!promptTitle.trim() || (activePrompt.category.label === "Custom" && !promptCategory.trim())}
+                  className="px-4 py-2 text-sm font-semibold bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Save & Categorize
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
