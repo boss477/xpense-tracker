@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle, Tag } from "lucide-react";
+import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle } from "lucide-react";
 import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
 
 const getSupabase = () => createClient(
@@ -78,33 +78,22 @@ export function SpendingChart() {
       }
 
       const totals = new Map<string, { total: number; count: number }>();
-      const knownDbValues = new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue));
-      const dynamicCategories: CategoryConfig[] = [];
+      const knownDbValuesSet = new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue));
 
       for (const row of data ?? []) {
-        // Collect totals
-        const cur = totals.get(row.category) ?? { total: 0, count: 0 };
+        // If not Income, Uncategorized, or known, treat its group as "Custom"
+        const groupCategory = 
+          (row.category !== "Income" && row.category !== "Uncategorized" && !knownDbValuesSet.has(row.category))
+            ? "Custom"
+            : row.category;
+
+        const cur = totals.get(groupCategory) ?? { total: 0, count: 0 };
         cur.total += Number(row.amount) || 0;
         cur.count += 1;
-        totals.set(row.category, cur);
-
-        // Dynamically add custom categories that aren't hardcoded in SPENDING_CATEGORIES
-        if (row.category && row.category !== "Income" && row.category !== "Uncategorized" && !knownDbValues.has(row.category)) {
-          if (!dynamicCategories.some(c => c.dbValue === row.category)) {
-            dynamicCategories.push({
-              label: row.category,
-              dbValue: row.category,
-              icon: Tag,
-              colorTheme: "bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 border-slate-500/30",
-              color: "#64748b",
-            });
-          }
-        }
+        totals.set(groupCategory, cur);
       }
 
-      const allSpendingCategories = [...SPENDING_CATEGORIES, ...dynamicCategories];
-
-      const next = allSpendingCategories.map((cfg) => ({
+      const next = SPENDING_CATEGORIES.map((cfg) => ({
         cfg,
         total: totals.get(cfg.dbValue)?.total ?? 0,
         count: totals.get(cfg.dbValue)?.count ?? 0,
@@ -124,6 +113,7 @@ export function SpendingChart() {
     load();
   }, []);
 
+  const knownDbValues = useMemo(() => new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue)), []);
   const total = useMemo(() => slices.reduce((sum, s) => sum + s.total, 0), [slices]);
 
   const arcs = useMemo(() => {
@@ -235,7 +225,12 @@ export function SpendingChart() {
             <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
               <h3 className="text-sm font-bold tracking-tight mb-2">Transaction History</h3>
               {expenses
-                .filter((e) => e.category === selected)
+                .filter((e) => {
+                  if (selected === "Custom") {
+                    return e.category === "Custom" || (e.category !== "Income" && e.category !== "Uncategorized" && !knownDbValues.has(e.category));
+                  }
+                  return e.category === selected;
+                })
                 .map((exp) => (
                   <div
                     key={exp.id}
@@ -245,14 +240,15 @@ export function SpendingChart() {
                       <p className="font-bold text-sm leading-tight">
                         {exp.merchant || "Unknown Merchant"}
                       </p>
-                      <p className="text-[11px] text-white/40 mt-0.5">
-                        {new Date(exp.created_at).toLocaleString("en-US", {
+                      <p className="text-[11px] text-white/40 mt-0.5 flex items-center gap-1.5">
+                        <span className="font-semibold text-white/60">{exp.category} &bull;</span>
+                        <span>{new Date(exp.created_at).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
                           hour: "numeric",
                           minute: "2-digit",
                           hour12: true,
-                        })}
+                        })}</span>
                       </p>
                     </div>
                     <span
