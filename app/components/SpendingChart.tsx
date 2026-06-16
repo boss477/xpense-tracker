@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle } from "lucide-react";
+import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
 
 const getSupabase = () => createClient(
@@ -56,12 +57,11 @@ function popOffset(mid: number): [number, number] {
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
 export function SpendingChart() {
-  const [slices, setSlices] = useState<Slice[]>([]);
-  const [incomeStats, setIncomeStats] = useState({ total: 0, count: 0 });
   const [expenses, setExpenses] = useState<RawExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"donut" | "bar">("donut");
   const [selected, setSelected] = useState<string | null>(null);
+  const [timeFilter, setTimeFilter] = useState<"this_month" | "last_month" | "all_time">("this_month");
 
   useEffect(() => {
     const load = async () => {
@@ -73,40 +73,9 @@ export function SpendingChart() {
 
       if (error) {
         console.error("Failed to load spending:", error);
-        setLoading(false);
-        return;
+      } else {
+        setExpenses((data as RawExpense[]) ?? []);
       }
-
-      const totals = new Map<string, { total: number; count: number }>();
-      const knownDbValuesSet = new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue));
-
-      for (const row of data ?? []) {
-        // If not Income, Uncategorized, or known, treat its group as "Custom"
-        const groupCategory = 
-          (row.category !== "Income" && row.category !== "Uncategorized" && !knownDbValuesSet.has(row.category))
-            ? "Custom"
-            : row.category;
-
-        const cur = totals.get(groupCategory) ?? { total: 0, count: 0 };
-        cur.total += Number(row.amount) || 0;
-        cur.count += 1;
-        totals.set(groupCategory, cur);
-      }
-
-      const next = SPENDING_CATEGORIES.map((cfg) => ({
-        cfg,
-        total: totals.get(cfg.dbValue)?.total ?? 0,
-        count: totals.get(cfg.dbValue)?.count ?? 0,
-      }))
-        .filter((s) => s.total > 0)
-        .sort((a, b) => b.total - a.total);
-
-      setSlices(next);
-      setIncomeStats({
-        total: totals.get("Income")?.total ?? 0,
-        count: totals.get("Income")?.count ?? 0,
-      });
-      setExpenses((data as RawExpense[]) ?? []);
       setLoading(false);
     };
 
@@ -114,6 +83,60 @@ export function SpendingChart() {
   }, []);
 
   const knownDbValues = useMemo(() => new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue)), []);
+
+  const filteredExpenses = useMemo(() => {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (timeFilter === "this_month") {
+      start = startOfMonth(now);
+      end = endOfMonth(now);
+    } else if (timeFilter === "last_month") {
+      const last = subMonths(now, 1);
+      start = startOfMonth(last);
+      end = endOfMonth(last);
+    } else {
+      return expenses;
+    }
+
+    return expenses.filter(e => {
+      const d = new Date(e.created_at);
+      return isWithinInterval(d, { start, end });
+    });
+  }, [expenses, timeFilter]);
+
+  const { slices, incomeStats } = useMemo(() => {
+    const totals = new Map<string, { total: number; count: number }>();
+
+    for (const row of filteredExpenses) {
+      const groupCategory = 
+        (row.category !== "Income" && row.category !== "Uncategorized" && !knownDbValues.has(row.category))
+          ? "Custom"
+          : row.category;
+
+      const cur = totals.get(groupCategory) ?? { total: 0, count: 0 };
+      cur.total += Number(row.amount) || 0;
+      cur.count += 1;
+      totals.set(groupCategory, cur);
+    }
+
+    const nextSlices = SPENDING_CATEGORIES.map((cfg) => ({
+      cfg,
+      total: totals.get(cfg.dbValue)?.total ?? 0,
+      count: totals.get(cfg.dbValue)?.count ?? 0,
+    }))
+      .filter((s) => s.total > 0)
+      .sort((a, b) => b.total - a.total);
+
+    const stats = {
+      total: totals.get("Income")?.total ?? 0,
+      count: totals.get("Income")?.count ?? 0,
+    };
+
+    return { slices: nextSlices, incomeStats: stats };
+  }, [filteredExpenses, knownDbValues]);
+
   const total = useMemo(() => slices.reduce((sum, s) => sum + s.total, 0), [slices]);
 
   const arcs = useMemo(() => {
@@ -136,7 +159,7 @@ export function SpendingChart() {
   return (
     <div className="rounded-3xl bg-[#1c1f17] text-white p-5 shadow-xl border border-white/5">
       {/* Header: title + view toggle */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-bold tracking-tight">Overview</h2>
           <p className="text-xs text-white/40">Income & Spending</p>
@@ -161,6 +184,30 @@ export function SpendingChart() {
             <ChartColumnBig className="h-4 w-4" />
           </button>
         </div>
+      </div>
+
+      {/* Time Filter Pills */}
+      <div className="flex items-center gap-2 mb-6">
+        {[
+          { id: "this_month", label: "This Month" },
+          { id: "last_month", label: "Last Month" },
+          { id: "all_time", label: "All Time" },
+        ].map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => {
+              setTimeFilter(opt.id as any);
+              setSelected(null);
+            }}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              timeFilter === opt.id
+                ? "bg-emerald-500 text-white shadow-sm"
+                : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -224,7 +271,7 @@ export function SpendingChart() {
           {selected && (
             <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
               <h3 className="text-sm font-bold tracking-tight mb-2">Transaction History</h3>
-              {expenses
+              {filteredExpenses
                 .filter((e) => {
                   if (selected === "Custom") {
                     return e.category === "Custom" || (e.category !== "Income" && e.category !== "Uncategorized" && !knownDbValues.has(e.category));
