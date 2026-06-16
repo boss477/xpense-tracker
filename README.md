@@ -45,6 +45,7 @@ Create a `.env.local` file in the root directory (this file is ignored by Git to
 NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+API_INGEST_SECRET=your-super-secret-token-here
 ```
 
 ### 3. Deploy the App
@@ -73,6 +74,7 @@ To forward incoming transaction SMS alerts to your web app in real-time, configu
 * **Action:** `HTTP POST`
 * **URL:** `https://your-deployed-app-url.vercel.app/api/ingest`
 * **Content Type:** `application/json`
+* **Header:** Add a new header with Name: `x-api-secret` and Value: `your-super-secret-token-here` (to match your environment variable).
 * **JSON Body:**
   ```json
   {

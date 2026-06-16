@@ -10,6 +10,12 @@ const getSupabase = () => createClient(
 );
 
 export async function POST(request: Request) {
+  // Validate the secret against your Environment Variable
+  const secret = request.headers.get("x-api-secret");
+  if (!secret || secret !== process.env.API_INGEST_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const rawMessage = body.raw_message;
