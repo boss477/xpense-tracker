@@ -52,7 +52,7 @@ API_INGEST_SECRET=your-super-secret-token-here
 Deploy the Next.js app to [Vercel](https://vercel.com/):
 1. Import your cloned GitHub repository.
 2. Add the environment variables from your `.env.local` to the Vercel project configuration.
-3. Deploy! You will receive a production URL (e.g., `https://xpense-tracker.vercel.app`).
+3. Deploy! You will receive a production URL (e.g., `https://your-app-name.vercel.app`).
 
 ### 4. Deploy with 1-Click
 You can also deploy directly using this Vercel Deploy button:
