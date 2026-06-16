@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle } from "lucide-react";
+import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle, Tag } from "lucide-react";
 import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
 
 const getSupabase = () => createClient(
@@ -78,14 +78,33 @@ export function SpendingChart() {
       }
 
       const totals = new Map<string, { total: number; count: number }>();
+      const knownDbValues = new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue));
+      const dynamicCategories: CategoryConfig[] = [];
+
       for (const row of data ?? []) {
+        // Collect totals
         const cur = totals.get(row.category) ?? { total: 0, count: 0 };
         cur.total += Number(row.amount) || 0;
         cur.count += 1;
         totals.set(row.category, cur);
+
+        // Dynamically add custom categories that aren't hardcoded in SPENDING_CATEGORIES
+        if (row.category && row.category !== "Income" && row.category !== "Uncategorized" && !knownDbValues.has(row.category)) {
+          if (!dynamicCategories.some(c => c.dbValue === row.category)) {
+            dynamicCategories.push({
+              label: row.category,
+              dbValue: row.category,
+              icon: Tag,
+              colorTheme: "bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 border-slate-500/30",
+              color: "#64748b",
+            });
+          }
+        }
       }
 
-      const next = SPENDING_CATEGORIES.map((cfg) => ({
+      const allSpendingCategories = [...SPENDING_CATEGORIES, ...dynamicCategories];
+
+      const next = allSpendingCategories.map((cfg) => ({
         cfg,
         total: totals.get(cfg.dbValue)?.total ?? 0,
         count: totals.get(cfg.dbValue)?.count ?? 0,
