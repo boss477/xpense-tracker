@@ -70,9 +70,9 @@ export async function POST(request: Request) {
       
       const parsedDate = new Date(cleanDateString);
       
-      // If it parsed successfully, overwrite the fallback date!
+      // If it parsed successfully, update the calendar date but KEEP the current time!
       if (!isNaN(parsedDate.getTime())) {
-        transactionDate = parsedDate;
+        transactionDate.setFullYear(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
       }
     }
 
