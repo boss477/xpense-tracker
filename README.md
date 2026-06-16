@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💸 Cashew Clone — Expense Triage & Automation Engine
 
-## Getting Started
+Cashew Clone is a sleek, real-time personal finance manager and expense triage system. It automatically ingests financial transaction SMS alerts directly from your Android phone, parses the amount, merchant, and transaction date, and feeds them into a dashboard where you can easily categorize them.
 
-First, run the development server:
+Designed with **Next.js 15 (App Router)**, **Supabase**, and styled using **Vanilla Tailwind CSS**, it is built to run fast and look premium.
+
+---
+
+## 🚀 Key Features
+
+* **Real-time SMS Ingestion:** API endpoint `/api/ingest` built specifically for phone automation tools like **MacroDroid**.
+* **Smart Ingestion Parser:** Automatically extracts merchant, transaction type (income/expense), amount (in INR/Rs.), and date from standard transaction alerts.
+* **Instant Dashboard Triage:** View, triage, and categorize your uncategorized expenses dynamically using real-time database subscriptions.
+* **Beautiful Analytics:** An interactive donut and bar chart overview of your spending history, categories, and income trends.
+
+---
+
+## 🛠️ Self-Hosting Setup Guide
+
+Anyone can clone and run their own copy of this tracker. Follow the steps below to set it up:
+
+### 1. Database Setup (Supabase)
+Create a free project on [Supabase](https://supabase.com/) and execute the following SQL in the SQL Editor to create the `expenses` table:
+
+```sql
+CREATE TABLE expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  amount NUMERIC NOT NULL,
+  merchant TEXT NOT NULL,
+  raw_message TEXT NOT NULL,
+  category TEXT DEFAULT 'Uncategorized',
+  type TEXT DEFAULT 'expense'
+);
+
+-- Optional: Enable Indexes for speed
+CREATE INDEX idx_expenses_category ON expenses(category);
+CREATE INDEX idx_expenses_created_at ON expenses(created_at DESC);
+```
+
+### 2. Environment Configuration
+Create a `.env.local` file in the root directory (this file is ignored by Git to keep your credentials safe):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+### 3. Deploy the App
+Deploy the Next.js app to [Vercel](https://vercel.com/):
+1. Import your cloned GitHub repository.
+2. Add the environment variables from your `.env.local` to the Vercel project configuration.
+3. Deploy! You will receive a production URL (e.g., `https://xpense-tracker.vercel.app`).
+
+---
+
+## 📱 MacroDroid Configuration (Android Automation)
+
+To forward incoming transaction SMS alerts to your web app in real-time, configure **MacroDroid** on your Android device:
+
+### Trigger: SMS Received
+* **Trigger:** `SMS Received`
+* **Sender:** *Select the contact names/codes of your banks (e.g., `AD-ICICIB`, `HDFCBK`)* or select `Any Sender` if you want to filter messages on your own.
+* **Message Content:** `Matches wildcard` -> `*Rs*` or `*INR*` (to only capture messages containing transactions).
+
+### Action: HTTP POST Ingestion
+* **Action:** `HTTP POST`
+* **URL:** `https://your-deployed-app-url.vercel.app/api/ingest`
+* **Content Type:** `application/json`
+* **JSON Body:**
+  ```json
+  {
+    "raw_message": "[sms_message]"
+  }
+  ```
+  *(Note: `[sms_message]` is a MacroDroid magic text variable that automatically expands to the contents of the received text message).*
+
+---
+
+## 💬 Need Help Setting Up?
+
+If you are setting up this tracker for yourself and need assistance with the **MacroDroid macro** configuration, database schema, or hosting deployment:
+
+👉 **Contact me — I will gladly help you get it running!**
+
+* 📧 **Email:** [fawaz0212kb@gmail.com](mailto:fawaz0212kb@gmail.com)
+* 💼 **LinkedIn:** [Fawaz Ahamed](https://www.linkedin.com/in/fawaz-ahamed-498239203/)
+
+---
+
+## 🛠️ Development
+
+Run the development server locally:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) in your browser to test.
