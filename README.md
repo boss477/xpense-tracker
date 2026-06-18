@@ -8,7 +8,7 @@ Designed with **Next.js 15 (App Router)**, **Supabase**, and styled using **Vani
 
 | Dashboard Overview | Analytics Insights |
 | :---: | :---: |
-| ![Dashboard Screenshot](./assets/pie.jpg) | ![Insights Screenshot](./assets/barline.jpg) |
+| ![Dashboard Screenshot](./assets/pie.jpg) | ![Insights Screenshot](./assets/bar.jpeg) |
 
 ### 🎥 Video Demonstration
 You can watch the product demo here: [Xpense Product Demo (product-demo.mp4)](./product-demo.mp4)
