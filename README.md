@@ -1,6 +1,6 @@
-# 💸 Cashew Clone — Expense Triage & Automation Engine
+# 💸 Xpense tracker — Expense Triage & Automation Engine
 
-Cashew Clone is a sleek, real-time personal finance manager and expense triage system. It automatically ingests financial transaction SMS alerts directly from your Android phone, parses the amount, merchant, and transaction date, and feeds them into a dashboard where you can easily categorize them.
+Xpense tracker is a sleek, real-time personal finance manager and expense triage system. It automatically ingests financial transaction SMS alerts directly from your Android phone, parses the amount, merchant, and transaction date, and feeds them into a dashboard where you can easily categorize them.
 
 Designed with **Next.js 15 (App Router)**, **Supabase**, and styled using **Vanilla Tailwind CSS**, it is built to run fast and look premium.
 
