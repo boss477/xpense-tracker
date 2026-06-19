@@ -92,3 +92,37 @@ export const SPENDING_CATEGORIES = CATEGORIES.filter((c) => c.dbValue !== "Incom
 
 export const categoryByDbValue = (dbValue: string) =>
   CATEGORIES.find((c) => c.dbValue === dbValue);
+
+export function extractMerchant(rawMessage: string): string {
+  if (!rawMessage) return "Unknown Merchant";
+  
+  // Clean up boilerplate text to avoid false positive matches
+  let cleanedMessage = rawMessage.replace(/Call \d+ for dispute\.?\s*/i, '');
+  cleanedMessage = cleanedMessage.replace(/SMS BLOCK .*? to \d+\.?/i, '');
+
+  let merchant = "Unknown Merchant";
+
+  // FORMAT A: Check for the new format -> "; NEW SARAVANAA S credited."
+  const newFormatMatch = cleanedMessage.match(/;\s*(.+?)\s+credited/i);
+  // FORMAT B: Info format -> "Info: UPI/653121257200/Swiggy."
+  const infoFormatMatch = cleanedMessage.match(/Info:\s*UPI\/\d+\/(.+?)(?:\.|$|\s)/i);
+  // FORMAT C: Old/standard format -> "sent to Swiggy. UPI Ref..."
+  const oldFormatMatch = cleanedMessage.match(/(?:sent to|paid to|to|VPA)\s+(.+?)(?:\s+on|\s+via|\s+Ref|\s+UPI|\.|$)/i);
+  // FORMAT D: Income format -> "from REWAA KAMAL BAT."
+  const incomeFormatMatch = cleanedMessage.match(/from\s+(.+?)(?:\.|\s+UPI|$)/i);
+
+  if (newFormatMatch) {
+    merchant = newFormatMatch[1].trim();
+  } else if (infoFormatMatch) {
+    merchant = infoFormatMatch[1].trim();
+  } else if (oldFormatMatch) {
+    merchant = oldFormatMatch[1].trim();
+  } else if (incomeFormatMatch) {
+    merchant = incomeFormatMatch[1].trim();
+  }
+
+  // Clean up any trailing punctuation just to be safe
+  merchant = merchant.replace(/[.,;]+$/, "").trim();
+  return merchant;
+}
+

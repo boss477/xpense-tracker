@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle } from "lucide-react";
+import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle, Trash2, RotateCcw } from "lucide-react";
 import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
-import { SPENDING_CATEGORIES, type CategoryConfig } from "../categories";
+import { SPENDING_CATEGORIES, type CategoryConfig, extractMerchant } from "../categories";
 
 const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +24,7 @@ interface RawExpense {
   merchant: string;
   created_at: string;
   type: string;
+  raw_message?: string;
 }
 
 // --- Donut geometry helpers ---
@@ -67,7 +68,7 @@ export function SpendingChart() {
     const load = async () => {
       const { data, error } = await getSupabase()
         .from("expenses")
-        .select("id, amount, category, merchant, created_at, type")
+        .select("id, amount, category, merchant, created_at, type, raw_message")
         .neq("category", "Uncategorized")
         .order("created_at", { ascending: false });
 
@@ -81,6 +82,36 @@ export function SpendingChart() {
 
     load();
   }, []);
+
+  const handleResetExpense = async (id: string, rawMessage: string) => {
+    const originalMerchant = extractMerchant(rawMessage);
+
+    // Optimistically update the local state
+    setExpenses((current) => current.filter((exp) => exp.id !== id));
+
+    const { error } = await getSupabase()
+      .from("expenses")
+      .update({ category: "Uncategorized", merchant: originalMerchant })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Failed to reset expense:", error);
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this transaction?")) return;
+    setExpenses((current) => current.filter((exp) => exp.id !== id));
+
+    const { error } = await getSupabase()
+      .from("expenses")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Failed to delete transaction:", error);
+    }
+  };
 
   const knownDbValues = useMemo(() => new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue)), []);
 
@@ -196,7 +227,7 @@ export function SpendingChart() {
           <button
             key={opt.id}
             onClick={() => {
-              setTimeFilter(opt.id as any);
+              setTimeFilter(opt.id as "this_month" | "last_month" | "all_time");
               setSelected(null);
             }}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
@@ -281,7 +312,7 @@ export function SpendingChart() {
                 .map((exp) => (
                   <div
                     key={exp.id}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5"
+                    className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors"
                   >
                     <div>
                       <p className="font-bold text-sm leading-tight">
@@ -298,13 +329,29 @@ export function SpendingChart() {
                         })}</span>
                       </p>
                     </div>
-                    <span
-                      className={`font-bold text-sm tracking-tight ${
-                        exp.type === "income" ? "text-emerald-400" : "text-white"
-                      }`}
-                    >
-                      {exp.type === "income" ? "+" : "-"}₹{exp.amount}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`font-bold text-sm tracking-tight mr-1 ${
+                          exp.type === "income" ? "text-emerald-400" : "text-white"
+                        }`}
+                      >
+                        {exp.type === "income" ? "+" : "-"}₹{exp.amount}
+                      </span>
+                      <button
+                        onClick={() => handleResetExpense(exp.id, exp.raw_message || "")}
+                        title="Move back to Triage Inbox (Uncategorize)"
+                        className="p-1.5 text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteExpense(exp.id)}
+                        title="Permanently Delete Transaction"
+                        className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>

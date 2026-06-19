@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { CheckCircle2, ChartPie } from "lucide-react";
+import { CheckCircle2, ChartPie, Trash2 } from "lucide-react";
 import { AddIncomeButton } from "./components/AddIncomeButton";
 import { CATEGORIES, type CategoryConfig } from "./categories";
 
@@ -81,6 +81,18 @@ export default function Dashboard() {
     if (error) console.error("Failed to update category/merchant:", error);
   };
 
+  const deleteExpense = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this transaction?")) return;
+    setExpenses((current) => current.filter((exp) => exp.id !== id));
+
+    const { error } = await getSupabase()
+      .from("expenses")
+      .delete()
+      .eq("id", id);
+
+    if (error) console.error("Failed to delete expense:", error);
+  };
+
   const handleCategoryClick = (expenseId: string, cat: CategoryConfig) => {
     const expense = expenses.find(e => e.id === expenseId);
     setActivePrompt({ expenseId, category: cat });
@@ -153,10 +165,17 @@ export default function Dashboard() {
                       {formatShortDate(expense.created_at)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-center gap-3">
                     <span className="font-bold text-red-500 text-xl tracking-tight">
                       -₹{expense.amount}
                     </span>
+                    <button
+                      onClick={() => deleteExpense(expense.id)}
+                      className="p-1.5 text-white/40 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                      title="Delete transaction"
+                    >
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </button>
                   </div>
                 </div>
 
