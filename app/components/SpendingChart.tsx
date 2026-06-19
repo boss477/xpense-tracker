@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle, Trash2, RotateCcw } from "lucide-react";
+import { ChartPie, ChartColumnBig, ChevronDown, X, Wallet, ArrowUpCircle, Trash2 } from "lucide-react";
 import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { SPENDING_CATEGORIES, type CategoryConfig, extractMerchant } from "../categories";
 
@@ -99,19 +99,7 @@ export function SpendingChart() {
     }
   };
 
-  const deleteExpense = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this transaction?")) return;
-    setExpenses((current) => current.filter((exp) => exp.id !== id));
 
-    const { error } = await getSupabase()
-      .from("expenses")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Failed to delete transaction:", error);
-    }
-  };
 
   const knownDbValues = useMemo(() => new Set(SPENDING_CATEGORIES.map(cfg => cfg.dbValue)), []);
 
@@ -329,9 +317,9 @@ export function SpendingChart() {
                         })}</span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <span
-                        className={`font-bold text-sm tracking-tight mr-1 ${
+                        className={`font-bold text-sm tracking-tight ${
                           exp.type === "income" ? "text-emerald-400" : "text-white"
                         }`}
                       >
@@ -339,14 +327,7 @@ export function SpendingChart() {
                       </span>
                       <button
                         onClick={() => handleResetExpense(exp.id, exp.raw_message || "")}
-                        title="Move back to Triage Inbox (Uncategorize)"
-                        className="p-1.5 text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteExpense(exp.id)}
-                        title="Permanently Delete Transaction"
+                        title="Remove from category (Send to Triage Inbox)"
                         className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
