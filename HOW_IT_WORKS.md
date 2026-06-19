@@ -113,6 +113,8 @@ The user classifies and triages incoming alerts in [`app/page.tsx`](file:///c:/U
    - Clicking a category quick-chip opens a modal.
    - The user can rename/clean up the merchant name.
    - For **Custom Categories** (like *Vacation* or *Gifts*), the user inputs their preferred custom category name. The app saves this directly to the database.
+4. **Permanent Deletion**:
+   - The user can click the trash can icon (`Trash2`) next to a transaction's amount to permanently delete it from the database (e.g. to discard spam or invalid alerts). A safety confirmation dialog is shown before deletion.
 
 ---
 
@@ -134,3 +136,8 @@ To avoid cluttering the charts with dozens of unique custom category names, the 
 ### 3. Custom SVG Donut & Bar Charts
 * **Donut Chart**: Uses trigonometry (`cos`, `sin`) to render precise donut segments and floating category icons at their center points. Clicking a slice pops it outward (`POP = 9px`) using SVG transforms and displays a breakdown of transactions.
 * **Bar Chart**: Renders responsive bars scaled proportionally to the highest spending category.
+
+### 4. Recategorization & Triage Resets
+* If a transaction is miscategorized (e.g. categorized as *Bills* but was actually *Transport*), the user can view the history list for that category.
+* Clicking the trash icon (`Trash2`) next to the transaction in the history list acts as a **"Remove from Category"** action. 
+* This updates the transaction category back to `Uncategorized` and restores the original merchant name. The transaction alert immediately returns to the Triage Inbox on the dashboard, allowing it to be correctly re-categorized.
