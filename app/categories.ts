@@ -8,6 +8,8 @@ import {
   ShoppingBag,
   HeartPulse,
   Tag,
+  Apple,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -77,6 +79,20 @@ export const CATEGORIES: CategoryConfig[] = [
     icon: Tag,
     colorTheme: "bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 border-slate-500/30",
     color: "#64748b",
+  },
+  {
+    label: "Fruits",
+    dbValue: "Fruits",
+    icon: Apple,
+    colorTheme: "bg-lime-500/10 text-lime-400 hover:bg-lime-500/20 border-lime-500/30",
+    color: "#84cc16",
+  },
+  {
+    label: "Investments",
+    dbValue: "Investments",
+    icon: TrendingUp,
+    colorTheme: "bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border-indigo-500/30",
+    color: "#6366f1",
   },
   {
     label: "Income",
