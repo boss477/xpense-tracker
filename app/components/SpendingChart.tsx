@@ -62,7 +62,8 @@ export function SpendingChart() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"donut" | "bar">("donut");
   const [selected, setSelected] = useState<string | null>(null);
-  const [timeFilter, setTimeFilter] = useState<"this_month" | "last_month" | "all_time">("this_month");
+  const [timeFilter, setTimeFilter] = useState<"this_month" | "last_month" | "all_time" | "custom">("this_month");
+  const [customMonth, setCustomMonth] = useState<string>(""); // "YYYY-MM"
 
   useEffect(() => {
     const load = async () => {
@@ -115,6 +116,11 @@ export function SpendingChart() {
       const last = subMonths(now, 1);
       start = startOfMonth(last);
       end = endOfMonth(last);
+    } else if (timeFilter === "custom" && customMonth) {
+      const [y, m] = customMonth.split("-").map(Number);
+      const picked = new Date(y, m - 1, 1);
+      start = startOfMonth(picked);
+      end = endOfMonth(picked);
     } else {
       return expenses;
     }
@@ -123,7 +129,7 @@ export function SpendingChart() {
       const d = new Date(e.created_at);
       return isWithinInterval(d, { start, end });
     });
-  }, [expenses, timeFilter]);
+  }, [expenses, timeFilter, customMonth]);
 
   const { slices, incomeStats } = useMemo(() => {
     const totals = new Map<string, { total: number; count: number }>();
@@ -206,7 +212,7 @@ export function SpendingChart() {
       </div>
 
       {/* Time Filter Pills */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         {[
           { id: "this_month", label: "This Month" },
           { id: "last_month", label: "Last Month" },
@@ -227,6 +233,27 @@ export function SpendingChart() {
             {opt.label}
           </button>
         ))}
+        {/* Pick a specific month & year */}
+        <label
+          className={`relative px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            timeFilter === "custom"
+              ? "bg-emerald-500 text-white shadow-sm"
+              : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          {timeFilter === "custom" && customMonth ? customMonth : "Pick Month"}
+          <input
+            type="month"
+            value={customMonth}
+            max={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`}
+            onChange={(e) => {
+              setCustomMonth(e.target.value);
+              setTimeFilter(e.target.value ? "custom" : "this_month");
+              setSelected(null);
+            }}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full"
+          />
+        </label>
       </div>
 
       {loading ? (
