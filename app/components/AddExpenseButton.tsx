@@ -15,6 +15,7 @@ export function AddExpenseButton({ onExpenseAdded }: { onExpenseAdded?: () => vo
   const [amount, setAmount] = useState("");
   const [merchant, setMerchant] = useState("");
   const [category, setCategory] = useState(SPENDING_CATEGORIES[0].dbValue);
+  const [date, setDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,22 +23,27 @@ export function AddExpenseButton({ onExpenseAdded }: { onExpenseAdded?: () => vo
     setIsSubmitting(true);
 
     try {
-      const { error } = await getSupabase().from("expenses").insert([
-        {
-          amount: parseFloat(amount),
-          merchant: merchant,
-          category: category,
-          type: "expense",
-          raw_message: `Manual expense entry: ${merchant}`,
-          status: "Categorized",
-        },
-      ]);
+      const payload: any = {
+        amount: parseFloat(amount),
+        merchant: merchant,
+        category: category,
+        type: "expense",
+        raw_message: `Manual expense entry: ${merchant}`,
+        status: "Categorized",
+      };
+      
+      if (date) {
+        payload.created_at = new Date(date).toISOString();
+      }
+
+      const { error } = await getSupabase().from("expenses").insert([payload]);
 
       if (error) throw error;
 
       setAmount("");
       setMerchant("");
       setCategory(SPENDING_CATEGORIES[0].dbValue);
+      setDate("");
       setIsOpen(false);
       if (onExpenseAdded) onExpenseAdded();
     } catch (error) {
@@ -109,6 +115,17 @@ export function AddExpenseButton({ onExpenseAdded }: { onExpenseAdded?: () => vo
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="expense-date" className="text-sm font-medium text-white/80">Date & Time (Optional)</label>
+                <input
+                  id="expense-date"
+                  type="datetime-local"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border border-white/10 bg-black/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  style={{ colorScheme: "dark" }}
+                />
               </div>
               <button
                 type="submit"

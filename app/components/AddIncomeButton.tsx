@@ -13,6 +13,7 @@ export function AddIncomeButton({ onIncomeAdded }: { onIncomeAdded?: () => void 
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState("");
+  const [date, setDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,21 +21,26 @@ export function AddIncomeButton({ onIncomeAdded }: { onIncomeAdded?: () => void 
     setIsSubmitting(true);
 
     try {
-      const { error } = await getSupabase().from("expenses").insert([
-        {
-          amount: parseFloat(amount),
-          merchant: source,
-          category: "Income",
-          type: "income",
-          raw_message: `Manual income entry: ${source}`,
-          status: "Categorized",
-        },
-      ]);
+      const payload: any = {
+        amount: parseFloat(amount),
+        merchant: source,
+        category: "Income",
+        type: "income",
+        raw_message: `Manual income entry: ${source}`,
+        status: "Categorized",
+      };
+      
+      if (date) {
+        payload.created_at = new Date(date).toISOString();
+      }
+
+      const { error } = await getSupabase().from("expenses").insert([payload]);
 
       if (error) throw error;
 
       setAmount("");
       setSource("");
+      setDate("");
       setIsOpen(false);
       if (onIncomeAdded) onIncomeAdded();
     } catch (error) {
@@ -89,6 +95,17 @@ export function AddIncomeButton({ onIncomeAdded }: { onIncomeAdded?: () => void 
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
                   className="w-full border border-white/10 bg-black/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-white/20"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="income-date" className="text-sm font-medium text-white/80">Date & Time (Optional)</label>
+                <input
+                  id="income-date"
+                  type="datetime-local"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border border-white/10 bg-black/20 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  style={{ colorScheme: "dark" }}
                 />
               </div>
               <button
