@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { CheckCircle2, ChartPie, Trash2 } from "lucide-react";
 import { AddIncomeButton } from "./components/AddIncomeButton";
+import { AddExpenseButton } from "./components/AddExpenseButton";
 import { CATEGORIES, type CategoryConfig } from "./categories";
 
 const getSupabase = () => createClient(
@@ -130,6 +131,7 @@ export default function Dashboard() {
               <ChartPie className="h-4 w-4" />
               Insights
             </Link>
+            <AddExpenseButton />
             <AddIncomeButton />
             <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
               <span className="relative flex h-2.5 w-2.5">
