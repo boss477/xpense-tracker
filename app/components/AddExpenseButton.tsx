@@ -29,7 +29,6 @@ export function AddExpenseButton({ onExpenseAdded }: { onExpenseAdded?: () => vo
         category: category,
         type: "expense",
         raw_message: `Manual expense entry: ${merchant}`,
-        status: "Categorized",
       };
       
       if (date) {

@@ -27,7 +27,6 @@ export function AddIncomeButton({ onIncomeAdded }: { onIncomeAdded?: () => void 
         category: "Income",
         type: "income",
         raw_message: `Manual income entry: ${source}`,
-        status: "Categorized",
       };
       
       if (date) {
